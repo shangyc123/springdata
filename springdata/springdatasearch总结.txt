@@ -1,0 +1,207 @@
+
+创建好数据模型之后我们还要做一件事情，就是索引还有就是映射关系，单独只创建索引是不行的，就好比mysql你创建了数据库，你还需要创建表。
+当然索引和映射关系手动创建也可以，我通过实现ApplicationRunner接口来创建
+之前会使用ElasticsearchRestTemplate来创建索引和映射，但是新的版本已经过时了，官方推荐使用ElasticsearchOperations。首先这里创建的索引一定要和@Document注解上的索引保持一致。
+ 
+
+-------------------------------------------------------------------------------------------------------------------
+1、添加索引
+	方式一：（使用ElasticsearchTemplate操作）
+	// 创建索引，会根据Item类的@Document注解信息来创建
+        elasticsearchTemplate.createIndex(Item.class);
+    // 配置映射，会根据Item类中的id、Field等字段来自动完成映射
+        elasticsearchTemplate.putMapping(Item.class);
+		
+	方式二：（使用RestHighLevelClient操作）		
+	// 创建索引请求，需指定的索引类的（indexName = "test_index"）属性
+        CreateIndexRequest request = new CreateIndexRequest("test_index");
+    // 客户端执行：创建索引的请求
+        CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
+		
+2、删除索引
+	方式一：（使用ElasticsearchTemplate操作）
+	// 删除索引，需指定的索引类的（indexName = "item"）属性
+		elasticsearchTemplate.deleteIndex("item");
+		
+	方式二：（使用RestHighLevelClient操作）
+	// 删除索引请求，需指定的索引类的（indexName = "test_index"）属性
+		DeleteIndexRequest request = new DeleteIndexRequest("test_index");
+	// 客户端执行：删除索引的请求
+        AcknowledgedResponse response = client.indices().delete(request, RequestOptions.DEFAULT);
+		
+3、判断索引是否存在
+	方式一：（使用ElasticsearchTemplate操作）
+	// 查询索引，需指定的索引类的（indexName = "item"）属性
+		elasticsearchTemplate.indexExists("item");
+
+	方式二：（使用RestHighLevelClient操作）
+	// 查询索引请求，需指定的索引类的（indexName = "test_index"）属性
+	    GetIndexRequest request = new GetIndexRequest("test_index");
+	// 客户端执行：查询索引的请求
+        boolean exists = client.indices().exists(request, RequestOptions.DEFAULT);
+		
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+以实体类的形式描述约束规则
+
+
+/**
+ * @Document 作用在类，标记实体类为文档对象，一般有两个属性
+ * 		indexName：对应索引库名称
+ * 		type：对应在索引库中的类型
+ * 		shards：分片数量，默认5
+ * 		replicas：副本数量，默认1
+ * @Id 作用在成员变量，标记一个字段作为id主键
+ * @Field 作用在成员变量，标记为文档的字段，并指定字段映射属性：
+ * 		type：字段类型，取值是枚举：FieldType
+ * 		index：是否索引，布尔类型，默认是true
+ * 		store：是否存储，布尔类型，默认是falseElasticsearchRepository
+ * 		analyzer：分词器名称
+ *	@Transient：默认情况下，所有私有字段都映射到文档，此注释将应用该字段的字段从数据库中存储出来
+ *
+ */
+
+@Document(indexName = "item",type = "docs", shards = 1, replicas = 0)
+public class Item implements Serializable {
+    @Id
+    private Long id;
+
+    @Field(type = FieldType.Text, analyzer = "ik_max_word")
+    private String title; //标题
+
+    @Field(type = FieldType.Keyword)
+    private String category;// 分类
+
+    @Field(type = FieldType.Keyword)
+    private String brand; // 品牌
+
+    @Field(type = FieldType.Double)
+    private Double price; // 价格
+
+    @Field(index = false, type = FieldType.Keyword)
+    private String images; // 图片地址
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+映射注释概述：
+
+该ElasticsearchEntityMapper可以使用元数据驱动的对象的映射文件。提供以下注释：
+
+@Id：在字段级别应用，以标记用于标识目的的字段。
+
+@Document：在类级别应用，以指示该类是映射到数据库的候选对象。最重要的属性是：
+
+indexName：用于存储此实体的索引的名称
+
+type：映射类型。如果未设置，则使用小写的类的简单名称。
+
+shards：索引的分片数。
+
+replicas：索引的副本数。
+
+refreshIntervall：索引的刷新间隔。用于索引创建。默认值为“ 1s”。
+
+indexStoreType：索引的索引存储类型。用于索引创建。默认值为“ fs”。
+
+createIndex：配置是否在存储库引导中创建索引。默认值为true。
+
+versionType：版本管理的配置。默认值为EXTERNAL。
+
+@Transient：默认情况下，所有私有字段都映射到文档，此注释将应用该字段的字段从数据库中存储出来
+
+@PersistenceConstructor：标记从数据库实例化对象时要使用的给定构造函数-甚至是受保护的程序包。构造函数参数按名称映射到检索到的Document中的键值。
+
+@Field：在字段级别应用并定义字段的属性，大多数属性映射到各自的Elasticsearch映射定义：
+
+name：字段名称，它将在Elasticsearch文档中表示，如果未设置，则使用Java字段名称。
+
+type：字段类型，可以是Text，Integer，Long，Date，Float，Double，Boolean，Object，Auto，Nested，Ip，Attachment，Keyword之一。
+
+format和Date类型的pattern自定义定义。
+
+store：标记是否将原始字段值存储在Elasticsearch中，默认值为false。
+
+analyzer，searchAnalyzer，normalizer用于指定自定义自定义分析和正规化。
+
+copy_to：要将多个文档字段复制到的目标字段。
+
+@GeoPoint：将字段标记为geo_point数据类型。如果字段是GeoPoint类的实例，则可以省略。
+
+映射元数据基础结构是在一个与技术无关的单独的spring-data-commons项目中定义的。
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+在使用ES进行操作的时候，我们其实可以使用Elasticsearch Repositories也可以使用ElasticsearchOperations接口，
+当然对于ES的语法不太熟悉且操作比较简单的我建议使用Repositories，数据结构上的@Id注解，其和传统的数据库主键的作用是一样的，
+默认的话ES会在后端自动生产一个UUID，当然也可以自己赋值去覆盖。
+
+Spring Data Elasticsearch使用两个接口来定义可以针对Elasticsearch索引调用的操作。分别是ElasticsearchOperations and ReactiveElasticsearchOperations。
+前者通常用于经典的同步实现，后者用于响应式编程。
+
+ElasticsearchTemplate是ElasticsearchOperations 接口的一个实现，是基于Transport Client操作的。
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+① ElasticsearchTemplate
+
+ElasticsearchTemplate是ElasticsearchOperations 接口的一个实现，是基于Transport Client操作的。
+
+示例代码如下：
+
+@Configuration
+public class TransportClientConfig extends ElasticsearchConfigurationSupport {
+
+  @Bean
+  public Client elasticsearchClient() throws UnknownHostException {                 
+    Settings settings = Settings.builder().put("cluster.name", "elasticsearch").build();
+    TransportClient client = new PreBuiltTransportClient(settings);
+    client.addTransportAddress(new TransportAddress(InetAddress.getByName("127.0.0.1"), 9300));
+    return client;
+  }
+
+  @Bean(name = {"elasticsearchOperations", "elasticsearchTemplate"})
+  public ElasticsearchTemplate elasticsearchTemplate() throws UnknownHostException { 
+  	return new ElasticsearchTemplate(elasticsearchClient(), entityMapper());
+  }
+
+  // use the ElasticsearchEntityMapper
+  @Bean
+  @Override
+  public EntityMapper entityMapper() {                                               
+    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
+  	  new DefaultConversionService());
+    entityMapper.setConversions(elasticsearchCustomConversions());
+    return entityMapper;
+  }
+}
+
+
+② ElasticsearchRestTemplate
+
+ElasticsearchRestTemplate是ElasticsearchOperations 接口的另一个实现，其是基于High Level REST Client.实现的。
+
+配置代码示例如下：
+
+@Configuration
+public class RestClientConfig extends AbstractElasticsearchConfiguration {
+    @Override
+    public RestHighLevelClient elasticsearchClient() {
+        ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+                .connectedTo("192.168.18.128:9200")
+                .withSocketTimeout(60000)
+                .withConnectTimeout(60000)
+                .build();
+        RestHighLevelClient restHighLevelClient = RestClients.create(clientConfiguration).rest();
+        System.out.println("RestClientConfig-elasticsearchClient:"+restHighLevelClient);
+        return restHighLevelClient;
+    }
+
+    // no special bean creation needed
+
+    // use the ElasticsearchEntityMapper
+    @Bean
+    @Override
+    public EntityMapper entityMapper() {
+        ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
+                new DefaultConversionService());
+        entityMapper.setConversions(elasticsearchCustomConversions());
+
+        return entityMapper;
+    }
+}

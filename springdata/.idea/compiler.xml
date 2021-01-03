@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="spring-data-elasticsearch-template" />
+        <module name="spring-data-solr-template" />
+        <module name="spring-data-elasticsearch-client" />
+        <module name="spring-data-solr-repositry" />
+        <module name="spring-data-elasticsearch-respository" />
+        <module name="springdata" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="spring-data-elasticsearch-client" target="1.8" />
+      <module name="spring-data-elasticsearch-respository" target="1.8" />
+      <module name="spring-data-elasticsearch-template" target="1.8" />
+      <module name="spring-data-solr-repositry" target="1.8" />
+      <module name="spring-data-solr-template" target="1.8" />
+      <module name="springdata" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="spring-data-elasticsearch-client" options="-parameters" />
+      <module name="spring-data-elasticsearch-respository" options="-parameters" />
+      <module name="spring-data-elasticsearch-template" options="-parameters" />
+      <module name="spring-data-solr-repositry" options="-parameters" />
+      <module name="spring-data-solr-template" options="-parameters" />
+      <module name="springdata" options="-parameters" />
+    </option>
+  </component>
+</project>

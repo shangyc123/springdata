@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/spring-data-elasticsearch-client/spring-data-elasticsearch-client.iml" filepath="$PROJECT_DIR$/spring-data-elasticsearch-client/spring-data-elasticsearch-client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/spring-data-elasticsearch-respository/spring-data-elasticsearch-respository.iml" filepath="$PROJECT_DIR$/spring-data-elasticsearch-respository/spring-data-elasticsearch-respository.iml" />
+      <module fileurl="file://$PROJECT_DIR$/spring-data-elasticsearch-template/spring-data-elasticsearch-template.iml" filepath="$PROJECT_DIR$/spring-data-elasticsearch-template/spring-data-elasticsearch-template.iml" />
+      <module fileurl="file://$PROJECT_DIR$/spring-data-solr-repositry/spring-data-solr-repositry.iml" filepath="$PROJECT_DIR$/spring-data-solr-repositry/spring-data-solr-repositry.iml" />
+      <module fileurl="file://$PROJECT_DIR$/spring-data-solr-template/spring-data-solr-template.iml" filepath="$PROJECT_DIR$/spring-data-solr-template/spring-data-solr-template.iml" />
+      <module fileurl="file://$PROJECT_DIR$/springdata.iml" filepath="$PROJECT_DIR$/springdata.iml" />
+    </modules>
+  </component>
+</project>
